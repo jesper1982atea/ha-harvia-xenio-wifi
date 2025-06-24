@@ -54,11 +54,17 @@ class HarviaHumiditySetPoint(NumberEntity):
     async def update_state(self):
         self.async_write_ha_state()
 
-    async def async_set_value(self, value):
-        """Update de ingestelde waarde."""
-        self._state = value
-        await self._device.set_target_relative_humidity(value)
-        self.async_write_ha_state()
+    async def async_set_native_value(self, value: float) -> None:
+        """Set new target humidity and update device state."""
+        # Update the device target humidity using the new API method.
+        await self._device.set_target_relative_humidity(int(value))
+        self._attr_native_value = value
+
+    @property
+    def native_value(self) -> float:
+        """Return the current humidity set point."""
+        # Return the target humidity from the device, defaulting to 0 if undefined.
+        return self._device.targetRh if self._device.targetRh is not None else 0
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up de Harvia numbers."""
